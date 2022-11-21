@@ -5,7 +5,7 @@ Processed_data files include some processed data in the analysis process for rep
 
 Raw TCGA RNA sequencing data can be accessed from https://toil-xena-hub.s3.us-east-1.amazonaws.com/download/TcgaTargetGtex_rsem_gene_tpm.gz. 
 
-Raw CGGA RNA sequencing data can be accessed from http://www.cgga.org.cn/download?file=download/20200506/CGGA.mRNAseq_325.RSEM-genes.20200506.txt.zip&type=mRNAseq_325&time=20200506. 
+Raw CGGA RNA sequencing data can be accessed from http://www.cgga.org.cn/index.jsp
 
 Note that their size exceeds 1 Gb!
 
