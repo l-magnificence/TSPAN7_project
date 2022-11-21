@@ -1,4 +1,4 @@
-# TSPAN7_projec
+# TSPAN7_project
 Code files include codes used to analyze TCGA and CGGA sequencing data.
 
 Processed_data files include some processed data in the analysis process for reproducing the figures of paper.
