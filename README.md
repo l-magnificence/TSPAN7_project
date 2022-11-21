@@ -9,10 +9,10 @@ Raw CGGA RNA sequencing data can be accessed from http://www.cgga.org.cn/downloa
 
 Note that their size exceeds 1 Gb!
 
-Publication state: https://doi.org/10.3389/fonc.2022.842973
+Publication state: in review
 
 In R, you can `setwd` to the cloned repository and run `code` to get started quickly, or you can just explore on your own. 
 
-Please drop a message if you have any question or information. 
+Any additional information required to reanalyze the data reported in this project is available from the lead contact upon request.
 
 -Magnificence
