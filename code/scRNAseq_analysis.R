@@ -14,25 +14,6 @@ min.max.norm <- function(x){
 }
 gene<-"TSPAN7"
 
-###------------GSE117891------------
-GSE117891_seurat <- readRDS("~/scRNA_GBM_integration/data/GSE117891/processed_data/GSE117891_seurat.rds")
-
-## rename cell
-GSE117891_seurat@meta.data$cell_type2 <- GSE117891_seurat@meta.data$cell_type
-GSE117891_seurat@meta.data$cell_type2 <- dplyr::recode(GSE117891_seurat@meta.data$cell_type2,
-                                                              "Cilium-related tumor cell"="Tumor cell",
-                                                              "Proliferating tumor cell"="Tumor cell",
-                                                              "M2b macrophages"="Macrophage",
-                                                              "Microglia"="Macrophage")
-
-DimPlot(GSE117891_seurat, reduction = "tsne",group.by = "cell_type2",label = F)+labs(title="")+
-  labs(title="GSE117891")+
-  theme(plot.title = element_text(hjust = 0.5))
-
-StackedVlnPlot(GSE117891_seurat, gene, group.by="cell_type2",pt.size=0, cols=my36colors,ncol = 1)+coord_flip()
-
-VlnPlot(GSE117891_seurat, gene, group.by="grade")
-
 ###------------GSE84465------------
 GSE84465_seurat <- readRDS("~/scRNA_GBM_integration/result/GSE84465_seurat_reassign.rds")
 GSE84465_seurat <-subset(GSE84465_seurat,cell_type2 !="Unassigned immune cell")
@@ -270,71 +251,5 @@ ggplot(gene_expr , aes(x=subtype, TSPAN7)) +
 dev.off()
 
 
-###------------cellchat data preprocess------------
-GSE84465_seurat<-readRDS("~/bioinfo_mill/tspan7_proj/processed/GSE84465_seurat.rds")
-## Extract gene high express object 
-gene_high_seurat<-subset(GSE84465_seurat,cell_type4 !=paste(gene,"_low",sep = ""))
-table(gene_high_seurat$cell_type4)
-DimPlot(gene_high_seurat,reduction = "tsne",group.by = "cell_type4",label = T,repel = T)
-
-output_exp<-as.matrix(gene_high_seurat@assays$SCT@data)
-labels <- gene_high_seurat$cell_type4
-output_identity <- data.frame(group = labels, row.names =colnames(gene_high_seurat)) 
-identical(rownames(output_identity),colnames(output_exp))
-saveRDS(output_exp,file = "./processed/cellchat/high.exp.rds")
-saveRDS(output_identity,file = "./processed/cellchat/high.identity.rds")
-
-## Extract gene low express object 
-gene_low_seurat<-subset(GSE84465_seurat,cell_type4 !=paste(gene,"_high",sep = ""))
-table(gene_low_seurat$cell_type4)
-DimPlot(gene_low_seurat,reduction = "tsne",group.by = "cell_type4",label = T,repel = T)
-
-output_exp<-as.matrix(gene_low_seurat@assays$SCT@data)
-labels <- gene_low_seurat$cell_type4
-output_identity <- data.frame(group = labels, row.names =colnames(gene_low_seurat)) 
-identical(rownames(output_identity),colnames(output_exp))
-saveRDS(output_exp,file = "./processed/cellchat/low.exp.rds")
-saveRDS(output_identity,file = "./processed/cellchat/low.identity.rds")
-
-for (i in c("high","low")) {
-  print(paste(i,"_data_processing",sep = ""))
-  exp_path<-paste("~/bioinfo_mill/tspan7_proj/processed/cellchat/",i,".exp.rds",sep = "")
-  iden_path<-paste("~/bioinfo_mill/tspan7_proj/processed/cellchat/",i,".identity.rds",sep = "")
-  output_path<-paste("~/bioinfo_mill/tspan7_proj/processed/cellchat/",i,"_cellchat.rds",sep = "")
-  ##load data
-  data.input<-readRDS(exp_path)
-  identity<-readRDS(iden_path)
-  unique(identity$group)
-  
-  ##Create a CellChat object
-  cellchat <- createCellChat(object = data.input, meta = identity, group.by = "group")
-  cellchat <- setIdent(cellchat, ident.use = "group") # set "labels" as default cell identity
-  levels(cellchat@idents) # show factor levels of the cell labels
-  groupSize <- as.numeric(table(cellchat@idents))
-  
-  ##Set the ligand-receptor interaction database
-  CellChatDB <- CellChatDB.human # use CellChatDB.human if running on human data
-  #cell-cell communication analysis包括"Cell-Cell Contact","ECM-Receptor","Secreted Signaling" 
-  # CellChatDB.use <- subsetDB(CellChatDB, search = "Secreted Signaling") # use Secreted Signaling
-  # use all CellChatDB for cell-cell communication analysis
-  CellChatDB.use <- CellChatDB # simply use the default CellChatDB
-  cellchat@DB <- CellChatDB.use # set the used database in the object
-  
-  ##Preprocessing the expression data for cell-cell communication analysis
-  cellchat <- subsetData(cellchat) # subset the expression data of signaling genes for saving computation cost
-  future::plan("multiprocess", workers = 48) # do parallel
-  cellchat <- identifyOverExpressedGenes(cellchat)
-  cellchat <- identifyOverExpressedInteractions(cellchat)
-  cellchat <- projectData(cellchat, PPI.human) #PPI.mouse
-  
-  ##Inference of cell-cell communication network
-  cellchat <- computeCommunProb(cellchat)
-  # Filter out the cell-cell communication if there are only few number of cells in certain cell groups
-  cellchat <- filterCommunication(cellchat, min.cells = 10)
-  cellchat <- computeCommunProbPathway(cellchat)
-  cellchat <- aggregateNet(cellchat)
-  
-  saveRDS(cellchat,file =output_path)
-}
 
 
